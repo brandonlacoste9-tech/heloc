@@ -1,0 +1,108 @@
+name: CI-Fixer Auto Repair
+
+on:
+  workflow_run:
+    workflows: ["*"]
+    types:
+      - completed
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  auto-fix:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    
+    steps:
+      - name: Get workflow run logs
+        id: get_logs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Get failed jobs
+            const jobs = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id
+            });
+            
+            let errorLogs = '';
+            for (const job of jobs.data.jobs) {
+              if (job.conclusion === 'failure') {
+                errorLogs += `\n\n=== Job: ${job.name} ===\n`;
+                errorLogs += `Status: ${job.conclusion}\n`;
+                errorLogs += `URL: ${job.html_url}\n\n`;
+                
+                // Extract error information from failed steps
+                for (const step of job.steps) {
+                  if (step.conclusion === 'failure') {
+                    errorLogs += `Failed Step: ${step.name}\n`;
+                    errorLogs += `Status: ${step.conclusion}\n`;
+                    if (step.number) {
+                      errorLogs += `Step Number: ${step.number}\n`;
+                    }
+                    errorLogs += '\n';
+                  }
+                }
+              }
+            }
+            
+            // Save logs to file
+            fs.writeFileSync('error_logs.txt', errorLogs);
+            
+            return errorLogs.substring(0, 1000); // Return first 1000 chars for display
+
+      - name: Analyze error with AI
+        id: analyze
+        run: |
+          echo "Analyzing error logs..."
+          
+          # This is a placeholder - in production, you would:
+          # 1. Send logs to your CI-Fixer service
+          # 2. Get AI analysis back
+          # 3. Apply the suggested fixes
+          
+          # For now, just show that we detected the failure
+          echo "detected=true" >> $GITHUB_OUTPUT
+          echo "message=CI failure detected and logged" >> $GITHUB_OUTPUT
+
+      - name: Create issue for manual review
+        if: steps.analyze.outputs.detected == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const errorLogs = fs.readFileSync('error_logs.txt', 'utf8');
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🤖 CI Failure: ${context.payload.workflow_run.name}`,
+              body: `## CI-Fixer Detection
+              
+A CI failure was detected in workflow run #${context.payload.workflow_run.run_number}.
+
+**Workflow:** ${context.payload.workflow_run.name}
+**Branch:** ${context.payload.workflow_run.head_branch}
+**Run URL:** ${context.payload.workflow_run.html_url}
+
+### Error Logs (truncated)
+\`\`\`
+${errorLogs.substring(0, 2000)}
+\`\`\`
+
+**Note:** This issue was automatically created by CI-Fixer. 
+Configure the CI-Fixer service to enable automatic PR creation with fixes.
+
+---
+*To set up automatic fixes:*
+1. Deploy the CI-Fixer service
+2. Configure webhook to POST to \`/api/webhook/ci-failure\`
+3. Add GITHUB_TOKEN and GEMINI_API_KEY secrets
+`,
+              labels: ['bug', 'ci-failure', 'automated']
+            });
