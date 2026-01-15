@@ -41,21 +41,19 @@ jobs:
             for (const job of jobs.data.jobs) {
               if (job.conclusion === 'failure') {
                 errorLogs += `\n\n=== Job: ${job.name} ===\n`;
+                errorLogs += `Status: ${job.conclusion}\n`;
+                errorLogs += `URL: ${job.html_url}\n\n`;
                 
-                // Get job logs
-                try {
-                  const logs = await github.rest.actions.downloadJobLogsForWorkflowRun({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    job_id: job.id
-                  });
-                  errorLogs += logs.data || 'No logs available';
-                } catch (error) {
-                  console.error(`Failed to get logs for job ${job.id}:`, error);
-                  errorLogs += job.steps
-                    .filter(step => step.conclusion === 'failure')
-                    .map(step => `Step ${step.name}: ${step.conclusion}`)
-                    .join('\n');
+                // Extract error information from failed steps
+                for (const step of job.steps) {
+                  if (step.conclusion === 'failure') {
+                    errorLogs += `Failed Step: ${step.name}\n`;
+                    errorLogs += `Status: ${step.conclusion}\n`;
+                    if (step.number) {
+                      errorLogs += `Step Number: ${step.number}\n`;
+                    }
+                    errorLogs += '\n';
+                  }
                 }
               }
             }

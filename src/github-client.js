@@ -118,20 +118,28 @@ async function getWorkflowRunLogs(owner, repo, runId) {
     
     for (const job of jobs.jobs) {
       if (job.conclusion === 'failure') {
-        try {
-          const { data: jobLogs } = await octokit.actions.downloadJobLogsForWorkflowRun({
-            owner,
-            repo,
-            job_id: job.id
-          });
-          
-          logs.push({
-            job_name: job.name,
-            logs: jobLogs
-          });
-        } catch (error) {
-          console.error(`Error fetching logs for job ${job.id}:`, error.message);
+        // Extract error information from failed steps
+        let jobLog = `Job: ${job.name}\n`;
+        jobLog += `Status: ${job.conclusion}\n`;
+        jobLog += `URL: ${job.html_url}\n\n`;
+        
+        for (const step of job.steps) {
+          if (step.conclusion === 'failure') {
+            jobLog += `Failed Step: ${step.name}\n`;
+            jobLog += `Status: ${step.conclusion}\n`;
+            if (step.number) {
+              jobLog += `Step Number: ${step.number}\n`;
+            }
+            jobLog += '\n';
+          }
         }
+        
+        logs.push({
+          job_name: job.name,
+          job_id: job.id,
+          logs: jobLog,
+          html_url: job.html_url
+        });
       }
     }
     

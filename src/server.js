@@ -120,13 +120,40 @@ async function processFailure(owner, repo, runId, branch) {
   try {
     console.log(`Processing failure for ${owner}/${repo}, run ${runId}`);
     
-    // In a real implementation:
-    // 1. Fetch logs from GitHub API
-    // 2. Analyze with AI
-    // 3. Create PR with fix
+    const { getWorkflowRunLogs } = require('./github-client');
     
-    // For now, just log
-    console.log('Would fetch logs, analyze, and create PR here');
+    // Fetch logs from GitHub
+    const logs = await getWorkflowRunLogs(owner, repo, runId);
+    
+    if (logs.length === 0) {
+      console.log('No failed jobs found');
+      return;
+    }
+    
+    // Combine logs for analysis
+    const combinedLogs = logs
+      .map(log => `${log.logs}`)
+      .join('\n\n---\n\n');
+    
+    // Analyze with AI
+    const analysis = await analyzeErrorLog(combinedLogs);
+    console.log('AI Analysis:', JSON.stringify(analysis, null, 2));
+    
+    // If we have suggested fixes, create a PR
+    if (analysis.suggested_fixes && analysis.suggested_fixes.length > 0) {
+      const pr = await createFixPR(
+        owner,
+        repo,
+        branch,
+        analysis.suggested_fixes,
+        `🤖 CI-Fixer: Auto-fix for workflow run #${runId}`,
+        `## Automated Fix\n\n${analysis.explanation}\n\n### Root Cause\n${analysis.root_cause}\n\n### Files Changed\n${analysis.affected_files.join(', ')}`
+      );
+      
+      console.log(`Created PR: ${pr.html_url}`);
+    } else {
+      console.log('No specific fixes suggested by AI');
+    }
   } catch (error) {
     console.error('Process failure error:', error);
   }
