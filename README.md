@@ -186,7 +186,18 @@ Get dashboard statistics.
 | `GITHUB_TOKEN` | Yes | GitHub Personal Access Token with `repo` and `workflow` permissions |
 | `GEMINI_API_KEY` | No | Google Gemini API key for AI analysis (falls back to rule-based if not provided) |
 | `PORT` | No | Server port (default: 3000) |
+| `CORS_ORIGIN` | No | CORS origin (* for all, or specific domain for production) |
 | `NODE_ENV` | No | Environment (development/production) |
+
+### Important Security Notes
+
+⚠️ **Log Sanitization**: Error logs may contain sensitive information such as API keys, passwords, or internal system details. 
+
+- Logs are truncated but NOT sanitized by default
+- Ensure your CI workflows don't log secrets
+- Use GitHub's secret masking features
+- Consider implementing custom sanitization for your use case
+- Review logs before they are sent to external AI services
 
 ### Getting API Keys
 

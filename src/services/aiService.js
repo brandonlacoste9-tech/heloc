@@ -266,8 +266,15 @@ Format your response as JSON with this structure:
     const limitedText = text.substring(0, 2000);
     const fileRegex = /file[:\s]+([^\n]+)/gi;
     let match;
+    let iterationCount = 0;
+    const maxIterations = 10; // Safety limit to prevent infinite loops
     
-    while ((match = fileRegex.exec(limitedText)) !== null) {
+    while ((match = fileRegex.exec(limitedText)) !== null && iterationCount < maxIterations) {
+      iterationCount++;
+      
+      // Ensure we have a valid match
+      if (!match[1] || match[1].trim().length === 0) continue;
+      
       fixes.push({
         file: match[1].trim(),
         description: 'See AI analysis',
