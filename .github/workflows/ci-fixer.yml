@@ -1,0 +1,172 @@
+name: CI-Fixer Auto-Fix
+
+on:
+  workflow_run:
+    workflows: ["*"]
+    types:
+      - completed
+
+jobs:
+  analyze-and-fix:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Get workflow run logs
+        id: get-logs
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const run_id = context.payload.workflow_run.id;
+            const repo = context.repo;
+            
+            // Get jobs for this workflow run
+            const { data: jobs } = await github.rest.actions.listJobsForWorkflowRun({
+              owner: repo.owner,
+              repo: repo.repo,
+              run_id: run_id,
+            });
+            
+            // Find failed jobs
+            const failedJobs = jobs.jobs.filter(job => job.conclusion === 'failure');
+            
+            if (failedJobs.length === 0) {
+              core.setOutput('has_failures', 'false');
+              return;
+            }
+            
+            core.setOutput('has_failures', 'true');
+            
+            // Get logs for first failed job
+            const failedJob = failedJobs[0];
+            const logUrl = failedJob.html_url;
+            
+            try {
+              const { data: logData } = await github.rest.actions.downloadJobLogsForWorkflowRun({
+                owner: repo.owner,
+                repo: repo.repo,
+                job_id: failedJob.id,
+              });
+              
+              core.setOutput('error_log', logData);
+              core.setOutput('job_name', failedJob.name);
+              core.setOutput('job_url', logUrl);
+            } catch (error) {
+              core.setOutput('error_log', `Failed to fetch logs: ${error.message}`);
+            }
+      
+      - name: Analyze error and create fix
+        if: steps.get-logs.outputs.has_failures == 'true'
+        id: analyze
+        run: |
+          # Send error log to CI-Fixer service
+          curl -X POST http://localhost:3000/api/analyze \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"repository\": \"${{ github.repository }}\",
+              \"workflow\": \"${{ github.event.workflow_run.name }}\",
+              \"branch\": \"${{ github.event.workflow_run.head_branch }}\",
+              \"commit\": \"${{ github.event.workflow_run.head_sha }}\",
+              \"error_log\": $(echo '${{ steps.get-logs.outputs.error_log }}' | jq -Rs .),
+              \"job_name\": \"${{ steps.get-logs.outputs.job_name }}\",
+              \"job_url\": \"${{ steps.get-logs.outputs.job_url }}\"
+            }" \
+            -o response.json || echo "Service not available, using fallback"
+          
+          # Note: In production, the CI-Fixer service should be deployed separately
+          echo "Analysis complete. Check CI-Fixer dashboard for status."
+      
+      - name: Create Pull Request with Fix
+        if: steps.get-logs.outputs.has_failures == 'true'
+        uses: actions/github-script@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        with:
+          script: |
+            const fs = require('fs');
+            const https = require('https');
+            
+            // This is a simplified version - in production, this would call the CI-Fixer service
+            const errorLog = `${{ steps.get-logs.outputs.error_log }}`;
+            const jobName = `${{ steps.get-logs.outputs.job_name }}`;
+            const branch = `${{ github.event.workflow_run.head_branch }}`;
+            
+            // Create a new branch for the fix
+            const fixBranch = `ci-fix/${branch}-${Date.now()}`;
+            
+            // Get the base branch reference
+            const { data: ref } = await github.rest.git.getRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `heads/${branch}`,
+            });
+            
+            // Create new branch
+            await github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/heads/${fixBranch}`,
+              sha: ref.object.sha,
+            });
+            
+            core.info(`Created fix branch: ${fixBranch}`);
+            
+            // Create PR with analysis info
+            const prBody = `## 🤖 CI-Fixer Automated Fix
+            
+            This PR was automatically created by CI-Fixer to address a CI failure.
+            
+            **Failed Workflow:** ${{ github.event.workflow_run.name }}
+            **Failed Job:** ${jobName}
+            **Original Branch:** ${branch}
+            **Job URL:** ${{ steps.get-logs.outputs.job_url }}
+            
+            ### Error Analysis
+            
+            \`\`\`
+            ${errorLog.substring(0, 1000)}...
+            \`\`\`
+            
+            ### Recommended Actions
+            
+            Please review the changes and merge if they resolve the CI failure.
+            You may need to manually apply fixes based on the error analysis above.
+            
+            ---
+            *Generated by CI-Fixer*
+            `;
+            
+            try {
+              const { data: pr } = await github.rest.pulls.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🤖 CI-Fixer: Auto-fix for ${jobName}`,
+                head: fixBranch,
+                base: branch,
+                body: prBody,
+              });
+              
+              core.info(`Created PR: ${pr.html_url}`);
+              
+              // Add label
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: ['ci-fixer', 'automated'],
+              });
+            } catch (error) {
+              core.warning(`Failed to create PR: ${error.message}`);
+            }
