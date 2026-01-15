@@ -83,13 +83,20 @@ jobs:
           # If the service is not available, the workflow will continue to create a PR
           # with the error log information for manual review.
           
-          # To use this step, deploy the CI-Fixer service and replace localhost:3000
-          # with your service URL (e.g., https://ci-fixer.example.com)
-          
-          # Example API call (commented out by default):
-          # curl -X POST https://your-ci-fixer-service.com/api/analyze \
+          # To use this step, deploy the CI-Fixer service and uncomment the following:
+          # 
+          # SERVICE_URL="https://your-ci-fixer-service.com"
+          # curl -X POST "$SERVICE_URL/api/analyze" \
           #   -H "Content-Type: application/json" \
-          #   -d "{ \"repository\": \"${{ github.repository }}\", ... }"
+          #   -d "{
+          #     \"repository\": \"${{ github.repository }}\",
+          #     \"workflow\": \"${{ github.event.workflow_run.name }}\",
+          #     \"branch\": \"${{ github.event.workflow_run.head_branch }}\",
+          #     \"commit\": \"${{ github.event.workflow_run.head_sha }}\",
+          #     \"error_log\": $(echo '${{ steps.get-logs.outputs.error_log }}' | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
+          #     \"job_name\": \"${{ steps.get-logs.outputs.job_name }}\",
+          #     \"job_url\": \"${{ steps.get-logs.outputs.job_url }}\"
+          #   }"
           
           echo "Skipping optional CI-Fixer service call. Creating PR with manual analysis."
       

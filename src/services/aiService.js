@@ -1,7 +1,5 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-
-// Constants
-const AI_LOG_LENGTH = 5000; // Maximum log length sent to AI
+const { AI_LOG_LENGTH } = require('../utils/constants');
 
 class AIService {
   constructor() {
@@ -35,6 +33,18 @@ class AIService {
   }
 
   buildAnalysisPrompt(errorLog, context) {
+    // Truncate log intelligently - keep complete lines
+    let truncatedLog = errorLog;
+    if (errorLog.length > AI_LOG_LENGTH) {
+      truncatedLog = errorLog.substring(0, AI_LOG_LENGTH);
+      // Find the last complete line
+      const lastNewline = truncatedLog.lastIndexOf('\n');
+      if (lastNewline > 0) {
+        truncatedLog = truncatedLog.substring(0, lastNewline);
+      }
+      truncatedLog += '\n... (truncated)';
+    }
+
     return `You are a CI/CD debugging expert. Analyze the following CI failure and provide actionable fixes.
 
 Repository: ${context.repository || 'unknown'}
@@ -43,7 +53,7 @@ Job: ${context.job_name || 'unknown'}
 
 ERROR LOG:
 \`\`\`
-${errorLog.substring(0, AI_LOG_LENGTH)}
+${truncatedLog}
 \`\`\`
 
 Please provide:
@@ -251,17 +261,22 @@ Format your response as JSON with this structure:
   }
 
   extractFixes(text) {
-    // Try to extract fix information from text
+    // Try to extract fix information from text (limit to first 2000 chars to avoid performance issues)
     const fixes = [];
-    const fileMatches = text.matchAll(/file[:\s]+([^\n]+)/gi);
+    const limitedText = text.substring(0, 2000);
+    const fileRegex = /file[:\s]+([^\n]+)/gi;
+    let match;
     
-    for (const match of fileMatches) {
+    while ((match = fileRegex.exec(limitedText)) !== null) {
       fixes.push({
         file: match[1].trim(),
         description: 'See AI analysis',
         code_change: 'Review AI recommendations',
         line_number: null
       });
+      
+      // Limit to 5 fixes to avoid excessive parsing
+      if (fixes.length >= 5) break;
     }
 
     return fixes.length > 0 ? fixes : [{

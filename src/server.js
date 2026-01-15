@@ -4,6 +4,7 @@ const path = require('path');
 const dotenv = require('dotenv');
 const aiService = require('./services/aiService');
 const githubService = require('./services/githubService');
+const { STORED_LOG_LENGTH, MAX_HISTORY_SIZE, API_REQUEST_LIMIT } = require('./utils/constants');
 
 dotenv.config();
 
@@ -11,15 +12,12 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
 
-// Constants for log truncation
-const STORED_LOG_LENGTH = 2000;
-
 // Store for tracking fixes
 const fixHistory = [];
 const activeAnalyses = new Map();
 
 // Middleware
-app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.json({ limit: API_REQUEST_LIMIT }));
 app.use(express.static(path.join(__dirname, '../public')));
 
 // CORS configuration
@@ -85,6 +83,11 @@ app.post('/api/analyze', async (req, res) => {
       if (analysis) {
         analysis.status = 'failed';
         analysis.error = error.message;
+        analysis.completed_at = new Date().toISOString();
+        
+        // Move to history
+        fixHistory.unshift(analysis);
+        activeAnalyses.delete(analysisId);
       }
     });
 
@@ -195,7 +198,7 @@ async function analyzeAndFix(analysisId, data) {
     fixHistory.unshift(analysis);
     
     // Keep history limited
-    if (fixHistory.length > 100) {
+    if (fixHistory.length > MAX_HISTORY_SIZE) {
       fixHistory.pop();
     }
     
