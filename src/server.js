@@ -9,6 +9,10 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
+
+// Constants for log truncation
+const STORED_LOG_LENGTH = 2000;
 
 // Store for tracking fixes
 const fixHistory = [];
@@ -18,9 +22,9 @@ const activeAnalyses = new Map();
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, '../public')));
 
-// CORS for local development
+// CORS configuration
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Origin', CORS_ORIGIN);
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   next();
 });
@@ -63,7 +67,7 @@ app.post('/api/analyze', async (req, res) => {
       job_url,
       status: 'analyzing',
       created_at: new Date().toISOString(),
-      error_log: error_log.substring(0, 2000) // Store truncated log
+      error_log: error_log.substring(0, STORED_LOG_LENGTH) // Store truncated log
     });
 
     // Start async analysis

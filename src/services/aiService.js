@@ -1,5 +1,8 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
+// Constants
+const AI_LOG_LENGTH = 5000; // Maximum log length sent to AI
+
 class AIService {
   constructor() {
     this.apiKey = process.env.GEMINI_API_KEY;
@@ -40,7 +43,7 @@ Job: ${context.job_name || 'unknown'}
 
 ERROR LOG:
 \`\`\`
-${errorLog.substring(0, 5000)}
+${errorLog.substring(0, AI_LOG_LENGTH)}
 \`\`\`
 
 Please provide:
