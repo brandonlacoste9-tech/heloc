@@ -1,0 +1,31 @@
+{
+  "name": "ci-fixer",
+  "version": "1.0.0",
+  "description": "AI-powered CI failure fixer that automatically creates PRs with suggested fixes",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [
+    "ci",
+    "github-actions",
+    "ai",
+    "automation",
+    "devops"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "dotenv": "^16.3.1",
+    "@google/generative-ai": "^0.2.0",
+    "@octokit/rest": "^20.0.2",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
