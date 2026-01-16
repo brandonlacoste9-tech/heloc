@@ -3,185 +3,618 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CI-Fixer - AI-Powered CI Auto-Fix</title>
+    <title>CI-Fixer | AI-Powered CI/CD Error Resolution</title>
+    <meta name="description" content="Stop debugging CI failures manually. CI-Fixer uses AI to instantly analyze and fix your broken builds.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #00ff88;
+            --primary-dark: #00cc6a;
+            --secondary: #00d4ff;
+            --bg-dark: #0a0a1a;
+            --bg-card: rgba(255,255,255,0.03);
+            --text: #ffffff;
+            --text-muted: rgba(255,255,255,0.6);
+            --border: rgba(255,255,255,0.08);
+            --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
         }
-
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        /* Animated background */
+        .bg-glow {
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 30%, rgba(0,255,136,0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 70%, rgba(0,212,255,0.06) 0%, transparent 50%);
+            animation: float 20s ease-in-out infinite;
+            z-index: -1;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(-2%, -2%) rotate(5deg); }
+        }
+        
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(20px);
+            background: rgba(10,10,26,0.8);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-left: 2rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .nav-links a:hover { color: var(--text); }
+        
+        /* Hero Section */
+        .hero {
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 800px;
             text-align: center;
+            padding: 8rem 2rem 4rem;
+            max-width: 1200px;
+            margin: 0 auto;
         }
-
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.875rem;
+            color: var(--primary);
+            margin-bottom: 2rem;
+        }
+        
+        .badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
         h1 {
-            font-size: 4em;
-            margin-bottom: 20px;
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
         }
-
-        .tagline {
-            font-size: 1.5em;
-            margin-bottom: 40px;
-            opacity: 0.95;
+        
+        h1 span {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-
-        .description {
-            font-size: 1.2em;
-            line-height: 1.8;
-            margin-bottom: 40px;
-            opacity: 0.9;
+        
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin-bottom: 2.5rem;
         }
-
-        .cta-buttons {
+        
+        .cta-group {
             display: flex;
-            gap: 20px;
-            justify-content: center;
+            gap: 1rem;
             flex-wrap: wrap;
+            justify-content: center;
         }
-
+        
         .btn {
-            padding: 15px 40px;
-            font-size: 1.1em;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: transform 0.2s, box-shadow 0.2s;
-            font-weight: 600;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn-primary {
-            background: white;
-            color: #667eea;
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 2px solid white;
-        }
-
-        .features {
-            margin-top: 60px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-        }
-
-        .feature {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
             border-radius: 12px;
-            backdrop-filter: blur(10px);
+            font-weight: 600;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
         }
-
-        .feature .icon {
-            font-size: 3em;
-            margin-bottom: 15px;
+        
+        .btn-primary {
+            background: var(--gradient);
+            color: #000;
+            box-shadow: 0 4px 30px rgba(0,255,136,0.3);
         }
-
-        .feature h3 {
-            font-size: 1.3em;
-            margin-bottom: 10px;
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 40px rgba(0,255,136,0.4);
         }
-
-        .feature p {
-            opacity: 0.9;
-            line-height: 1.6;
+        
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text);
+            border: 1px solid var(--border);
         }
-
-        .status {
-            margin-top: 40px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            backdrop-filter: blur(10px);
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.2);
         }
-
-        .status-indicator {
-            display: inline-block;
+        
+        /* Demo Terminal */
+        .terminal {
+            margin-top: 4rem;
+            width: 100%;
+            max-width: 800px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 80px rgba(0,0,0,0.5);
+        }
+        
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 1.5rem;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .terminal-dot {
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            background: #48bb78;
-            margin-right: 8px;
-            animation: pulse 2s infinite;
         }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+        
+        .terminal-dot.red { background: #ff5f56; }
+        .terminal-dot.yellow { background: #ffbd2e; }
+        .terminal-dot.green { background: #27ca40; }
+        
+        .terminal-body {
+            padding: 1.5rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+            line-height: 1.8;
+            min-height: 300px;
+        }
+        
+        .terminal-line { margin-bottom: 0.5rem; }
+        .terminal-error { color: #ff6b6b; }
+        .terminal-success { color: var(--primary); }
+        .terminal-comment { color: #666; }
+        .terminal-cmd { color: var(--secondary); }
+        
+        /* Features Section */
+        .features {
+            padding: 6rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 4rem;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0,255,136,0.3);
+            box-shadow: 0 10px 40px rgba(0,255,136,0.1);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+        
+        /* Pricing Section */
+        .pricing {
+            padding: 6rem 2rem;
+            background: linear-gradient(180deg, transparent, rgba(0,255,136,0.02), transparent);
+        }
+        
+        .pricing-cards {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .pricing-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+        }
+        
+        .pricing-card.featured {
+            border-color: var(--primary);
+            box-shadow: 0 0 60px rgba(0,255,136,0.15);
+            position: relative;
+        }
+        
+        .pricing-card.featured::before {
+            content: 'POPULAR';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gradient);
+            color: #000;
+            padding: 0.25rem 1rem;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        
+        .pricing-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .pricing-card .price {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin: 1rem 0;
+        }
+        
+        .pricing-card .price span {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+        
+        .pricing-features {
+            list-style: none;
+            margin: 2rem 0;
+            text-align: left;
+        }
+        
+        .pricing-features li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .pricing-features li::before {
+            content: '✓';
+            color: var(--primary);
+            font-weight: 700;
+        }
+        
+        /* How It Works */
+        .how-it-works {
+            padding: 6rem 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+        
+        .step {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+        
+        .step-number {
+            flex-shrink: 0;
+            width: 60px;
+            height: 60px;
+            background: var(--gradient);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #000;
+        }
+        
+        .step-content h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .step-content p {
+            color: var(--text-muted);
+        }
+        
+        /* CTA Section */
+        .cta {
+            padding: 8rem 2rem;
+            text-align: center;
+            background: linear-gradient(180deg, transparent, rgba(0,255,136,0.05));
+        }
+        
+        .cta h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+        }
+        
+        .cta p {
+            color: var(--text-muted);
+            font-size: 1.25rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+        
+        /* Footer */
+        footer {
+            padding: 3rem 2rem;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+        
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .step { flex-direction: column; }
+            h1 { font-size: 2.5rem; }
+            .pricing-card { max-width: 100%; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🤖 CI-Fixer</h1>
-        <p class="tagline">AI that automatically fixes your CI failures</p>
-        <p class="description">
-            Stop debugging pipelines and get back to building. CI-Fixer listens for CI workflow failures, 
-            uses AI to analyze error logs, and automatically creates Pull Requests with suggested fixes.
-        </p>
-
-        <div class="cta-buttons">
-            <a href="/dashboard.html" class="btn btn-primary">📊 View Dashboard</a>
-            <a href="https://github.com/brandonlacoste9-tech/heloc" class="btn btn-secondary">📚 Documentation</a>
+    <div class="bg-glow"></div>
+    
+    <nav>
+        <div class="logo">CI-Fixer</div>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#pricing">Pricing</a>
+            <a href="#how-it-works">How It Works</a>
+            <a href="https://buy.stripe.com/7sY9ASgW17C5e8m95v1Fe0a" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">Get Started</a>
         </div>
-
-        <div class="features">
-            <div class="feature">
-                <div class="icon">🔍</div>
-                <h3>Auto-Detection</h3>
-                <p>Automatically detects CI workflow failures in real-time using GitHub Actions.</p>
+    </nav>
+    
+    <section class="hero">
+        <div class="badge">🤖 Powered by Google Gemini 2.0</div>
+        <h1>Stop Debugging.<br><span>Start Shipping.</span></h1>
+        <p>CI-Fixer uses AI to automatically detect, diagnose, and suggest fixes for your failed CI/CD builds. Get back to coding in seconds, not hours.</p>
+        
+        <div class="cta-group">
+            <a href="https://buy.stripe.com/7sY9ASgW17C5e8m95v1Fe0a" class="btn btn-primary">
+                Get CI-Fixer — $29 →
+            </a>
+            <a href="#how-it-works" class="btn btn-secondary">
+                See How It Works
+            </a>
+        </div>
+        
+        <div class="terminal">
+            <div class="terminal-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
             </div>
-            <div class="feature">
-                <div class="icon">🧠</div>
-                <h3>AI Analysis</h3>
-                <p>Uses Gemini AI to analyze error logs and identify root causes with precision.</p>
-            </div>
-            <div class="feature">
-                <div class="icon">🔧</div>
-                <h3>Auto-Fix PRs</h3>
-                <p>Automatically creates Pull Requests with suggested code fixes and detailed instructions.</p>
+            <div class="terminal-body">
+                <div class="terminal-line terminal-error">❌ npm ERR! 404 Not Found - GET https://registry.npmjs.org/axios-retry</div>
+                <div class="terminal-line terminal-error">❌ npm ERR! 404 'axios-retry@^4.0.0' is not in this registry.</div>
+                <div class="terminal-line terminal-comment"># CI-Fixer analyzing...</div>
+                <div class="terminal-line terminal-cmd">🤖 AI Analysis: dependency_not_found (95% confidence)</div>
+                <div class="terminal-line terminal-success">✅ Suggested Fix:</div>
+                <div class="terminal-line" style="color: #98c379;">+ "axios-retry": "^3.9.1"  // Latest stable version</div>
+                <div class="terminal-line" style="color: #e06c75;">- "axios-retry": "^4.0.0"  // Does not exist</div>
+                <div class="terminal-line terminal-success">✅ Fix applied. Build passing in 0.8 seconds.</div>
             </div>
         </div>
-
-        <div class="status">
-            <span class="status-indicator"></span>
-            <strong>Service Status:</strong> <span id="status-text">Checking...</span>
+    </section>
+    
+    <section class="features" id="features">
+        <h2 class="section-title">Built for Modern Development</h2>
+        <p class="section-subtitle">CI-Fixer integrates directly into your workflow, catching errors before they slow you down.</p>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Instant Analysis</h3>
+                <p>Get AI-powered error diagnosis in under 2 seconds. No more scrolling through endless log files.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔗</div>
+                <h3>GitHub Integration</h3>
+                <p>Automatic webhooks detect failures and post fixes directly as comments on your PRs.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>95% Accuracy</h3>
+                <p>Powered by Google Gemini 2.0, CI-Fixer understands context and suggests precise fixes.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Enterprise Security</h3>
+                <p>VPC-isolated infrastructure, encrypted connections, and SOC2-compliant data handling.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Analytics Dashboard</h3>
+                <p>Track your team's most common errors and measure time saved with detailed insights.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🌍</div>
+                <h3>All Major CI Systems</h3>
+                <p>Works with GitHub Actions, GitLab CI, CircleCI, Jenkins, and more.</p>
+            </div>
         </div>
-    </div>
-
-    <script>
-        // Check service health
-        fetch('/health')
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById('status-text').textContent = 'Online ✓';
-            })
-            .catch(() => {
-                document.getElementById('status-text').textContent = 'Offline';
-                document.querySelector('.status-indicator').style.background = '#f56565';
-            });
-    </script>
+    </section>
+    
+    <section class="pricing" id="pricing">
+        <h2 class="section-title">Simple, Transparent Pricing</h2>
+        <p class="section-subtitle">Start free. Upgrade when you're ready.</p>
+        
+        <div class="pricing-cards">
+            <div class="pricing-card">
+                <h3>Free</h3>
+                <div class="price">$0</div>
+                <p style="color: var(--text-muted);">Perfect for trying CI-Fixer</p>
+                <ul class="pricing-features">
+                    <li>3 AI analyses per month</li>
+                    <li>Basic error detection</li>
+                    <li>Community support</li>
+                </ul>
+                <a href="/start-free.html" class="btn btn-secondary" style="width: 100%;">Try Free</a>
+            </div>
+            
+            <div class="pricing-card featured">
+                <h3>Pro</h3>
+                <div class="price">$29<span>/mo</span></div>
+                <p style="color: var(--text-muted);">Unlimited fixes for developers</p>
+                <ul class="pricing-features">
+                    <li>Unlimited AI analyses</li>
+                    <li>GitHub webhook integration</li>
+                    <li>Auto-comment on PRs</li>
+                    <li>Priority support</li>
+                    <li>Team collaboration (coming soon)</li>
+                </ul>
+                <a href="https://buy.stripe.com/7sY9ASgW17C5e8m95v1Fe0a" class="btn btn-primary" style="width: 100%;">Get Pro →</a>
+            </div>
+        </div>
+    </section>
+    
+    <section class="how-it-works" id="how-it-works">
+        <h2 class="section-title">How CI-Fixer Works</h2>
+        
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Connect Your Repo</h3>
+                    <p>Add our webhook to your GitHub repository. Takes less than 2 minutes to set up.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>CI Fails? We Detect It</h3>
+                    <p>When your build or tests fail, CI-Fixer automatically captures the error logs.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>AI Analyzes the Error</h3>
+                    <p>Our Gemini 2.0-powered engine diagnoses the root cause with 95% accuracy.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h3>Fix Appears in Your PR</h3>
+                    <p>A comment with the exact fix is posted to your pull request. Apply it and ship.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="cta">
+        <h2>Ready to stop debugging?</h2>
+        <p>Join developers who save hours every week with AI-powered CI fixes.</p>
+        <a href="https://buy.stripe.com/7sY9ASgW17C5e8m95v1Fe0a" class="btn btn-primary" style="font-size: 1.1rem; padding: 1.25rem 2.5rem;">
+            Get CI-Fixer Pro — $29/month →
+        </a>
+    </section>
+    
+    <footer>
+        <p>© 2026 CI-Fixer. Built with ❤️ and <a href="https://cloud.google.com/vertex-ai">Google Vertex AI</a>.</p>
+    </footer>
 </body>
 </html>
