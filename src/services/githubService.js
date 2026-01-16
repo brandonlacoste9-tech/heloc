@@ -135,13 +135,6 @@ class GitHubService {
 
     return body;
   }
-
-  async applyCodeFixes(owner, repo, branch, fixes) {
-    // This would implement actual code changes
-    // For MVP, we'll just create the PR with recommendations
-    console.log('Code fix application not yet implemented');
-    return [];
-  }
 }
 
 module.exports = new GitHubService();
