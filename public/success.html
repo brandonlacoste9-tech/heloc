@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - CI-Fixer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+        .container {
+            text-align: center;
+            padding: 3rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+            max-width: 500px;
+        }
+        .icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        p {
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        .features {
+            text-align: left;
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: rgba(0,255,136,0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(0,255,136,0.2);
+        }
+        .features h3 {
+            color: #00ff88;
+            margin-bottom: 1rem;
+        }
+        .features ul {
+            list-style: none;
+        }
+        .features li {
+            padding: 0.5rem 0;
+            color: rgba(255,255,255,0.8);
+        }
+        .features li::before {
+            content: "✓ ";
+            color: #00ff88;
+        }
+        .btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            color: #000;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,255,136,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🎉</div>
+        <h1>Welcome to CI-Fixer Pro!</h1>
+        <p>Your subscription is now active. You have unlimited access to AI-powered CI/CD error resolution.</p>
+        
+        <div class="features">
+            <h3>What's Included:</h3>
+            <ul>
+                <li>Unlimited AI error analyses</li>
+                <li>Automatic fix suggestions with code diffs</li>
+                <li>GitHub integration for auto-fix PRs</li>
+                <li>Priority support</li>
+                <li>Access to all future features</li>
+            </ul>
+        </div>
+        
+        <a href="/dashboard.html" class="btn">Go to Dashboard →</a>
+    </div>
+</body>
+</html>

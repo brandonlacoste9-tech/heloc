@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CI-Fixer Webhook Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0a0a0c; color: #e4e4e7; }
+        .outfit { font-family: 'Outfit', sans-serif; }
+        .glass { background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .btn-glow { transition: all 0.3s ease; }
+        .btn-glow:hover { box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); transform: translateY(-1px); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+    <div class="max-w-4xl w-full glass rounded-3xl p-8 shadow-2xl">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-bold outfit bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">Webhook Simulator</h1>
+                <p class="text-zinc-500 mt-1 uppercase tracking-widest text-xs font-semibold">Bypass CI - Direct Agent Test</p>
+            </div>
+            <div class="flex items-center space-square-2">
+                <div class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+                <span class="text-xs text-zinc-400 font-medium">Agent Active</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-zinc-400 mb-2">Failure Log (Mock 404)</label>
+                    <textarea id="errorLog" class="w-full h-48 bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 text-xs font-mono focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">npm ERR! 404 Not Found - GET https://registry.npmjs.org/missing-package-demo - Not found
+npm ERR! 'missing-package-demo' is not in the npm registry.</textarea>
+                </div>
+                <button onclick="simulate()" class="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl btn-glow flex items-center justify-center gap-2">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    Trigger Ralph Agent
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider">Agent Response</h2>
+                <div id="result" class="w-full h-64 bg-zinc-950 border border-zinc-800 rounded-xl p-4 overflow-auto text-xs font-mono text-indigo-300">
+                    Waiting for trigger...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function simulate() {
+            const log = document.getElementById('errorLog').value;
+            const resDiv = document.getElementById('result');
+            resDiv.innerHTML = '<span class="animate-pulse text-zinc-500">Ralph is thinking...</span>';
+
+            try {
+                const response = await fetch('/api/fix', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ error_log: log })
+                });
+                const data = await response.json();
+                resDiv.innerHTML = JSON.stringify(data, null, 2);
+            } catch (e) {
+                resDiv.innerHTML = 'Error: ' + e.message;
+            }
+        }
+    </script>
+</body>
+</html>
