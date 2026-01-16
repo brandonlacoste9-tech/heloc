@@ -1,0 +1,140 @@
+{
+  "name": "devhound",
+  "displayName": "DevHound",
+  "description": "🐺 Autonomous code healing powered by the Ralph Loop. Privacy-first, 37% faster fixes.",
+  "version": "0.1.0",
+  "publisher": "colony-os",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brandonlacoste9-tech/devhound-vscode"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Formatters",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "code-healing",
+    "autonomous",
+    "fix",
+    "lint",
+    "repair",
+    "devhound",
+    "ralph-loop"
+  ],
+  "icon": "assets/devhound-icon-128.png",
+  "galleryBanner": {
+    "color": "#0d1117",
+    "theme": "dark"
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "devhound.scanFile",
+        "title": "DevHound: Scan Current File",
+        "icon": "$(search)"
+      },
+      {
+        "command": "devhound.healFile",
+        "title": "DevHound: Auto-Heal Current File",
+        "icon": "$(wand)"
+      },
+      {
+        "command": "devhound.toggleAutoFix",
+        "title": "DevHound: Toggle Auto-Fix on Save"
+      },
+      {
+        "command": "devhound.showStatus",
+        "title": "DevHound: Show Connection Status"
+      }
+    ],
+    "configuration": {
+      "title": "DevHound",
+      "properties": {
+        "devhound.bridgeUrl": {
+          "type": "string",
+          "default": "http://localhost:4000",
+          "description": "URL of the Neural Bridge (ignite_server)"
+        },
+        "devhound.autoFixOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically run Ralph Loop on file save"
+        },
+        "devhound.hmacSecret": {
+          "type": "string",
+          "default": "",
+          "description": "HMAC secret for secure bridge communication (optional)"
+        },
+        "devhound.showStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show DevHound status in the status bar"
+        },
+        "devhound.logToLedger": {
+          "type": "boolean",
+          "default": true,
+          "description": "Log all fixes to the Sovereign Ledger"
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "devhound.scanFile",
+        "key": "ctrl+shift+d",
+        "mac": "cmd+shift+d",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "devhound.healFile",
+        "key": "ctrl+shift+h",
+        "mac": "cmd+shift+h",
+        "when": "editorTextFocus"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "devhound.scanFile",
+          "group": "devhound@1",
+          "when": "editorTextFocus"
+        },
+        {
+          "command": "devhound.healFile",
+          "group": "devhound@2",
+          "when": "editorTextFocus"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "test:mock": "node ./test/mock-bridge.js",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.2",
+    "@vscode/vsce": "^2.22.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.2"
+  }
+}

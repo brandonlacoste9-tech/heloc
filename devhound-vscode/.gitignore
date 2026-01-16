@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Compiled output
+out/
+
+# VS Code test environment
+.vscode-test/
+
+# Package files
+*.vsix
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
